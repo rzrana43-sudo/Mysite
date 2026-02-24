@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>সমবায় সমিতি ম্যানেজমেন্ট - প্রো</title>
+<style>
+:root{--pink:#e2136e;--bg:#f5f6fa;--gray:#777;--green:#2ecc71}
+body{margin:0;font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:var(--bg);padding-bottom:90px}
+.hidden{display:none !important}
+.page{padding:12px; max-width: 600px; margin: auto;}
+.card{background:#fff;padding:14px;border-radius:14px;margin-bottom:12px;box-shadow:0 2px 5px rgba(0,0,0,0.05)}
+button{background:var(--pink);color:#fff;border:none;padding:12px;border-radius:12px;width:100%;cursor:pointer;font-weight:600; margin-top: 10px;}
+input,select{width:100%;padding:10px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd;box-sizing:border-box}
+.header{background:var(--pink);color:#fff;text-align:center;padding:14px; font-weight: bold; position: sticky; top:0; z-index:100}
+.menu{position:fixed;bottom:0;left:0;right:0;display:flex;background:#fff;border-top:1px solid #eee;z-index:1000}
+.menu a{flex:1;text-align:center;padding:12px 0;color:#777;text-decoration:none;font-size:12px; cursor: pointer;}
+.menu a.active{color:var(--pink);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:#fff;padding:12px;border-radius:12px;cursor:pointer;border-left:5px solid var(--pink)}
+.stat h4{margin:0;font-size:13px;color:var(--gray)}
+.stat p{margin:6px 0 0;font-weight:600}
+table{width:100%;border-collapse:collapse;background:#fff; margin-top: 10px; min-width: 450px;}
+th,td{border:1px solid #ddd;padding:6px;font-size:10px;text-align:center}
+th{background:#f8f9fa; color: var(--pink);}
+.preview-img{width:40px;height:40px;object-fit:cover;border-radius:5px;display:none;margin:5px auto; border:1px solid #ddd}
+.btn-sm{padding:4px 6px; border-radius: 4px; border:none; color:#fff; font-size: 9px; cursor: pointer; margin: 2px;}
+.del{background:#d32f2f}
+.edit{background:#1976d2}
+.t-foot{font-weight: bold; background: #f1f1f1;}
+</style>
+</head>
+<body>
+
+<div class="header">সমবায় সমিতি ম্যানেজমেন্ট</div>
+
+<div class="page" id="loginPage">
+  <div class="card">
+    <h3 style="text-align:center;color:var(--pink)">🔐 লগইন</h3>
+    <input id="loginId" placeholder="মোাবাইল / আইডি">
+    <input type="password" id="loginPass" placeholder="পাসওয়ার্ড">
+    <select id="loginRole">
+      <option value="member">সদস্য</option>
+      <option value="officer">অফিসার</option>
+    </select>
+    <button onclick="login()">প্রবেশ করুন</button>
+  </div>
+</div>
+
+<div class="page hidden" id="dashboard">
+  <h3>🏦 ড্যাশবোর্ড</h3>
+  <div class="grid" id="fundGrid"></div>
+</div>
+
+<div class="page hidden" id="memberPage">
+  <button onclick="toggleMemberForm()" style="background: var(--green); margin-bottom: 10px;">➕ নতুন সদস্য যোগ করুন</button>
+  <div class="card hidden" id="memberFormCard">
+    <h4 id="mFormTitle">সদস্য ফরম</h4>
+    <input id="mName" placeholder="নাম">
+    <input id="mMobile" placeholder="মোবাইল">
+    <input id="mNid" placeholder="NID নম্বর">
+    <div class="grid">
+        <div style="text-align:center"><input type="file" accept="image/*" onchange="pv(this,'p1')"><img id="p1" class="preview-img"></div>
+        <div style="text-align:center"><input type="file" accept="image/*" onchange="pv(this,'p2')"><img id="p2" class="preview-img"></div>
+    </div>
+    <button id="mSaveBtn" onclick="addMember()">সংরক্ষণ করুন</button>
+  </div>
+  <div id="memberList"></div>
+</div>
+
+<div class="page hidden" id="entryPage">
+  <div class="card">
+    <h4 id="entryTitle">লেনদেন এন্ট্রি</h4>
+    <input type="date" id="tDate">
+    <select id="tFund"></select>
+    
+    <input id="tMember" placeholder="সদস্যের নাম" list="memberListSuggest">
+    <datalist id="memberListSuggest"></datalist>
+    
+    <div class="grid">
+        <input id="tSop" type="number" placeholder="সাপ্তাহিক জমা">
+        <input id="tSon" type="number" placeholder="সঞ্চয়">
+    </div>
+    <input id="tJor" type="number" placeholder="জরিমানা">
+    <select id="tType">
+        <option value="deposit">জমা (Deposit)</option>
+        <option value="expense">খরচ/উত্তোলন</option>
+    </select>
+    <button onclick="addTransaction()">লেনদেন সম্পন্ন করুন</button>
+  </div>
+</div>
+
+<div class="page hidden" id="historyPage">
+  <div class="card" style="overflow-x: auto;">
+    <h4 id="histTitle">ইতিহাস</h4>
+    <table>
+      <thead>
+        <tr>
+          <th>তারিখ</th>
+          <th>নাম</th>
+          <th>সাপ্তাহিক</th>
+          <th>সঞ্চয়</th>
+          <th>জরিমানা</th>
+          <th>মোট</th>
+          <th>অ্যাকশন</th>
+        </tr>
+      </thead>
+      <tbody id="histBody"></tbody>
+      <tfoot id="histFoot" class="t-foot"></tfoot>
+    </table>
+    <div class="grid">
+        <button onclick="showPage('dashboard')" style="background: #555;">ফিরে যান</button>
+        <button onclick="exportToCSV()" style="background: var(--green);">📥 ডাউনলোড এক্সেল</button>
+    </div>
+  </div>
+</div>
+
+<div class="page hidden" id="profilePage">
+  <div class="card">
+    <h4>👤 প্রোফাইল</h4>
+    <p id="pName"></p><p id="pMobile"></p>
+    <button onclick="logout()" style="background: #333;">লগ আউট</button>
+  </div>
+</div>
+
+<div class="menu hidden" id="bottomMenu">
+  <a id="nav-dash" onclick="nav('dashboard')">ড্যাশবোর্ড</a>
+  <a id="nav-memb" onclick="nav('memberPage')">সদস্য</a>
+  <a id="nav-entr" onclick="nav('entryPage')">এন্ট্রি</a>
+  <a id="nav-prof" onclick="nav('profilePage')">প্রোফাইল</a>
+</div>
+
+<script>
+let members = JSON.parse(localStorage.getItem('members') || '[]');
+let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+const officer = {id:"admin", password:"1234", name:"Admin Officer"};
+const fundBN = {savings:'সঞ্চয় তহবিল', loan:'ঋণ তহবিল', investment:'বিনিয়োগ', profit:'লাভ'};
+let role = null, user = null, currentFund = null, editMemIdx = -1, editTxIdx = -1;
+
+// Auto-suggest আপডেট ফাংশন
+function updateMemberSuggestions() {
+    const list = document.getElementById('memberListSuggest');
+    list.innerHTML = members.map(m => `<option value="${m.name}">`).join('');
+}
+
+// Image Preview
+function pv(input, id) {
+    if (input.files && input.files[0]) {
+        let r = new FileReader();
+        r.onload = e => { const img = document.getElementById(id); img.src = e.target.result; img.style.display = 'block'; };
+        r.readAsDataURL(input.files[0]);
+    }
+}
+
+// Navigation
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+    if(id === 'dashboard') renderFunds();
+    if(id === 'memberPage') renderMembers();
+    if(id === 'entryPage') updateMemberSuggestions(); // এন্ট্রি পেজে গেলে লিস্ট আপডেট হবে
+}
+
+function nav(id) {
+    document.querySelectorAll('.menu a').forEach(a => a.classList.remove('active'));
+    const el = document.getElementById('nav-' + id.substring(0,4));
+    if(el) el.classList.add('active');
+    showPage(id);
+}
+
+// Login
+function login() {
+    const id = document.getElementById('loginId').value, pass = document.getElementById('loginPass').value, r = document.getElementById('loginRole').value;
+    if (r === 'officer' && id === officer.id && pass === officer.password) { role = 'officer'; user = officer; } 
+    else { 
+        let m = members.find(x => x.mobile === id && x.password === pass); 
+        if(m){ role='member'; user=m; } else { return alert("ভুল তথ্য!"); } 
+    }
+    document.getElementById('bottomMenu').classList.remove('hidden');
+    document.getElementById('nav-entr').style.display = (role === 'officer') ? 'block' : 'none';
+    document.getElementById('nav-memb').style.display = (role === 'officer') ? 'block' : 'none';
+    const tFund = document.getElementById('tFund');
+    tFund.innerHTML = Object.keys(fundBN).map(f => `<option value="${f}">${fundBN[f]}</option>`).join('');
+    document.getElementById('pName').innerText = "নাম: " + user.name;
+    document.getElementById('pMobile').innerText = "আইডি: " + (user.mobile || user.id);
+    updateMemberSuggestions();
+    showPage('dashboard');
+}
+
+// Dashboard
+function renderFunds() {
+    const grid = document.getElementById('fundGrid'); grid.innerHTML = '';
+    Object.keys(fundBN).forEach(f => {
+        let bal = transactions.filter(t => t.fund === f).reduce((s, t) => s + (t.type === 'deposit' ? t.total : -t.total), 0);
+        grid.innerHTML += `<div class="stat" onclick="openHistory('${f}')"><h4>${fundBN[f]}</h4><p>৳ ${bal}</p></div>`;
+    });
+}
+
+// Member Logic
+function toggleMemberForm() { editMemIdx = -1; document.getElementById('mFormTitle').innerText="সদস্য ফরম"; document.getElementById('memberFormCard').classList.toggle('hidden'); }
+function addMember() {
+    const m = { name: document.getElementById('mName').value, mobile: document.getElementById('mMobile').value, nid: document.getElementById('mNid').value, pic: document.getElementById('p1').src || '', password: '1234' };
+    if(!m.name || !m.mobile) return alert("তথ্য দিন");
+    if(editMemIdx > -1) members[editMemIdx] = m; else members.push(m);
+    localStorage.setItem('members', JSON.stringify(members));
+    alert("সংরক্ষিত হয়েছে!"); 
+    updateMemberSuggestions();
+    document.getElementById('memberFormCard').classList.add('hidden'); 
+    renderMembers();
+}
+function renderMembers() {
+    const list = document.getElementById('memberList'); list.innerHTML = '<h4>সদস্য তালিকা</h4>';
+    members.forEach((m, i) => {
+        list.innerHTML += `<div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <div><b>${m.name}</b><br><small>${m.mobile}</small></div>
+            <div>
+                <button class="btn-sm edit" onclick="editMem(${i})">Edit</button>
+                <button class="btn-sm del" onclick="delMem(${i})">Del</button>
+            </div>
+        </div>`;
+    });
+}
+function delMem(i) { if(confirm("সদস্য ডিলিট করবেন?")){ members.splice(i,1); localStorage.setItem('members', JSON.stringify(members)); updateMemberSuggestions(); renderMembers(); } }
+function editMem(i) { editMemIdx = i; const m = members[i]; document.getElementById('mName').value=m.name; document.getElementById('mMobile').value=m.mobile; document.getElementById('mNid').value=m.nid; document.getElementById('mFormTitle').innerText="সদস্য এডিট"; document.getElementById('memberFormCard').classList.remove('hidden'); }
+
+// Transaction Logic
+function addTransaction() {
+    const sop = parseFloat(document.getElementById('tSop').value) || 0;
+    const son = parseFloat(document.getElementById('tSon').value) || 0;
+    const jor = parseFloat(document.getElementById('tJor').value) || 0;
+    const t = {
+        fund: document.getElementById('tFund').value,
+        date: document.getElementById('tDate').value || new Date().toISOString().split('T')[0],
+        name: document.getElementById('tMember').value,
+        sop, son, jor, total: (sop + son + jor),
+        type: document.getElementById('tType').value
+    };
+    if(!t.name) return alert("নাম দিন");
+    if(editTxIdx > -1) { transactions[editTxIdx] = t; editTxIdx = -1; } else { transactions.push(t); }
+    localStorage.setItem('transactions', JSON.stringify(transactions));
+    alert("লেনদেন সফল!"); 
+    document.getElementById('tMember').value = ''; // এন্ট্রি শেষে নাম ক্লিয়ার করা
+    showPage('dashboard');
+}
+
+function openHistory(f) {
+    currentFund = f; showPage('historyPage');
+    document.getElementById('histTitle').innerText = fundBN[f] + " ইতিহাস";
+    const body = document.getElementById('histBody');
+    const foot = document.getElementById('histFoot');
+    body.innerHTML = '';
+    let tSop=0, tSon=0, tJor=0, tTot=0;
+
+    transactions.filter(t => t.fund === f).forEach((t, i) => {
+        tSop+=t.sop; tSon+=t.son; tJor+=t.jor; tTot+=t.total;
+        body.innerHTML += `<tr>
+            <td>${t.date}</td>
+            <td>${t.name}</td>
+            <td>${t.sop}</td>
+            <td>${t.son}</td>
+            <td>${t.jor}</td>
+            <td style="font-weight:bold; color:green">${t.total}</td>
+            <td>
+                <button class="btn-sm edit" onclick="editTx(${i})">E</button>
+                <button class="btn-sm del" onclick="delTx(${i})">D</button>
+            </td>
+        </tr>`;
+    });
+    foot.innerHTML = `<tr><td colspan="2">মোট:</td><td>${tSop}</td><td>${tSon}</td><td>${tJor}</td><td colspan="2">৳ ${tTot}</td></tr>`;
+}
+
+function delTx(i) { if(confirm("লেনদেন ডিলিট করবেন?")){ transactions.splice(i,1); localStorage.setItem('transactions', JSON.stringify(transactions)); openHistory(currentFund); } }
+function editTx(i) {
+    editTxIdx = i; const t = transactions[i]; showPage('entryPage');
+    document.getElementById('tDate').value=t.date; document.getElementById('tMember').value=t.name;
+    document.getElementById('tSop').value=t.sop; document.getElementById('tSon').value=t.son; document.getElementById('tJor').value=t.jor;
+}
+
+// Export to Excel (CSV)
+function exportToCSV() {
+    if (transactions.length === 0) return alert("কোনো ডেটা নেই!");
+    let csv = "\ufeffতারিখ,সদস্যের নাম,সাপ্তাহিক জমা,সঞ্চয়,জরিমানা,মোট টাকা,তহবিল\n";
+    transactions.forEach(t => {
+        csv += `${t.date},${t.name},${t.sop},${t.son},${t.jor},${t.total},${fundBN[t.fund]}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", "somobay_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function logout() { location.reload(); }
+</script>
+</body>
+</html>
